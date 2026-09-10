@@ -1,6 +1,10 @@
 /* Android WebView adaptation layered over the official DeepSeek Harness UI. */
 :root {
   -webkit-tap-highlight-color: transparent;
+  --dsh-safe-top: env(safe-area-inset-top, 0px);
+  --dsh-safe-right: env(safe-area-inset-right, 0px);
+  --dsh-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --dsh-safe-left: env(safe-area-inset-left, 0px);
 }
 
 html,
@@ -15,15 +19,77 @@ body,
 body {
   margin: 0;
   overscroll-behavior: none;
-  padding-bottom: env(safe-area-inset-bottom, 0);
   touch-action: manipulation;
 }
 
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+.md-code-block,
+.md-table-wide,
+pre,
+table {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
 @media (max-width: 720px) {
+  body {
+    padding: var(--dsh-safe-top) var(--dsh-safe-right) var(--dsh-safe-bottom) var(--dsh-safe-left);
+  }
+
+  #root {
+    height: auto;
+    min-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
+    min-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
+  }
+
+  button,
+  [role='button'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   input,
   select,
   textarea {
     font-size: max(16px, 1em);
+    max-width: 100%;
+  }
+
+  [role='dialog'],
+  [role='menu'],
+  [data-radix-popper-content-wrapper] {
+    max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
+    max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
+    overscroll-behavior: contain;
+  }
+
+  #root,
+  #root * {
+    min-width: 0;
+  }
+
+  .md-code-block,
+  pre {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 520px) {
+  [role='dialog'] {
+    max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
+    max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
   }
 }
 

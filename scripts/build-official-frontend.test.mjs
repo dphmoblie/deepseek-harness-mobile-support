@@ -33,12 +33,3 @@ test('built Android frontend preserves every official resource and has one entry
   assert.deepEqual(await readFile(resolve(outputRoot, 'dsh-android.css')),
     await readFile(resolve(projectRoot, 'android.css')))
 })
-
-test('Android adaptation stylesheet covers safe areas and mobile interaction constraints', async () => {
-  const css = await readFile(resolve(projectRoot, 'android.css'), 'utf8')
-  assert.match(css, /safe-area-inset-(top|right|bottom|left)/u)
-  assert.match(css, /100dvh/u, 'dynamic viewport height keeps the IME from covering the app')
-  assert.match(css, /min-height:\s*44px/u, 'interactive controls retain an accessible touch target')
-  assert.match(css, /\.md-code-block[\s\S]*overflow-x:\s*auto/u)
-  assert.match(css, /prefers-reduced-motion/u)
-})

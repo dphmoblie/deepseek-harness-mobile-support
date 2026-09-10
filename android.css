@@ -1,0 +1,118 @@
+/* Android WebView adaptation layered over the official DeepSeek Harness UI. */
+:root {
+  -webkit-tap-highlight-color: transparent;
+  --dsh-safe-top: env(safe-area-inset-top, 0px);
+  --dsh-safe-right: env(safe-area-inset-right, 0px);
+  --dsh-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --dsh-safe-left: env(safe-area-inset-left, 0px);
+}
+
+html,
+body,
+#root {
+  box-sizing: border-box;
+  height: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* Dynamic viewport units prevent the WebView's URL/IME bars from covering the app. */
+@supports (height: 100dvh) {
+  html,
+  body,
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+/* Keep long model output readable without forcing the whole page to scroll sideways. */
+.md-code-block,
+.md-table-wide,
+pre,
+table {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+@media (max-width: 720px) {
+  body {
+    /* Insets belong to the page edge; child panels can still use their own scrolling. */
+    padding: var(--dsh-safe-top) var(--dsh-safe-right) var(--dsh-safe-bottom) var(--dsh-safe-left);
+  }
+
+  #root {
+    height: auto;
+    min-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
+    min-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
+  }
+
+  /* A 44px hit target is the Android accessibility minimum. */
+  button,
+  [role='button'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+    max-width: 100%;
+  }
+
+  /* Dialogs and menus remain usable when the software keyboard is visible. */
+  [role='dialog'],
+  [role='menu'],
+  [data-radix-popper-content-wrapper] {
+    max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
+    max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
+    overscroll-behavior: contain;
+  }
+
+  /* Prevent unbroken paths/URLs from widening a message bubble. */
+  #root,
+  #root * {
+    min-width: 0;
+  }
+
+  .md-code-block,
+  pre {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 720px) and (max-height: 520px) {
+  /* Landscape phones have little vertical room; preserve access to the composer. */
+  [role='dialog'] {
+    max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
+    max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
+  }
+}
+
+@media (max-width: 720px) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

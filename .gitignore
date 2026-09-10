@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.dist-android/
+coverage/
+*.log
+*.tmp

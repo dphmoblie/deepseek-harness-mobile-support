@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.19.0",
-  "description": "官方 DeepSeek Harness Web 前端的 Android 打包适配层",
+  "description": "官方 DeepSeek Harness Web 前端的 Android/WebView 移动端适配层（过渡方案，官方支持移动端后归档）",
   "scripts": {
     "build": "node scripts/build-official-frontend.mjs",
     "test": "node --test scripts/*.test.mjs"
@@ -15,8 +15,18 @@
   "keywords": [
     "dsh",
     "dsh-web",
+    "deepseek",
     "deepseek-harness",
     "android",
+    "webview",
+    "capacitor",
+    "mobile",
+    "responsive",
+    "mobile-first",
+    "css",
+    "touch-targets",
+    "safe-area",
+    "accessibility",
     "official-frontend"
   ]
 }

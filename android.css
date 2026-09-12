@@ -39,6 +39,10 @@ table {
   overscroll-behavior-x: contain;
 }
 
+/* The official bundle styles controls through CSS-Modules hash classes
+   (specificity 0,1,0), so bare element selectors below never win. Touch-target
+   and anti-zoom rules therefore carry `!important`, scoped to narrow viewports
+   and coarse pointers only: desktop and tablet keep the official metrics. */
 @media (max-width: 720px) {
   body {
     padding: var(--dsh-safe-top) var(--dsh-safe-right) var(--dsh-safe-bottom) var(--dsh-safe-left);
@@ -50,20 +54,45 @@ table {
     min-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
   }
 
-  button,
-  [role='button'],
-  input[type='button'],
-  input[type='submit'],
-  input[type='reset'] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
+  /* Below 16px the WebView zooms the page on focus and never zooms back. */
   input,
   select,
   textarea {
-    font-size: max(16px, 1em);
+    font-size: max(16px, 1em) !important;
     max-width: 100%;
+  }
+
+  /* The official UI packs icon controls at 16-28px on fixed `height`, which a
+     44px `min-height` would beat and burst out of its dense rows. Grow the hit
+     area with a centered pseudo-element instead: the tap target reaches 44px
+     while the layout box keeps the official metrics. Neither official
+     stylesheet declares a single `::after`, so nothing is overwritten. */
+  button,
+  [role='button'],
+  [role='tab'],
+  [role='menuitem'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'] {
+    position: relative;
+  }
+
+  button::after,
+  [role='button']::after,
+  [role='tab']::after,
+  [role='menuitem']::after,
+  input[type='button']::after,
+  input[type='submit']::after,
+  input[type='reset']::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+    /* Hit area only: never paints, never intercepts the parent's own hover. */
+    pointer-events: auto;
   }
 
   [role='dialog'],
@@ -83,6 +112,75 @@ table {
   pre {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+  }
+
+  /* Width handles drive a pointer-precise drag (pointermove against a captured
+     origin). On a touch screen they cannot be aimed and only misfire, so they
+     leave the hit-testing tree. The collapsed 56px rail stays: it carries the
+     only control that reopens the sidebar. */
+  [data-width-handle],
+  [data-side='sidebar'],
+  [data-side='rightbar'] {
+    display: none !important;
+  }
+
+  /* The clearance is tuned for desktop reading comfort; the transcript pads
+     clearance + 16px per side on top of it. On a 360px screen that spends 64px
+     on margins. Halving it, and letting the content width follow the column
+     instead of the 680px desktop floor, returns the space to the message body
+     and the input card (measured: card 208px -> 240px). */
+  [data-phase] {
+    --dsh-composer-side-clearance: 8px !important;
+    --dsh-chat-content-width: 100% !important;
+  }
+}
+
+/* Sidebar as an overlay drawer.
+ *
+ * The shell lays out three columns as a grid whose `grid-template-columns` is
+ * written inline by the app, so only `!important` reaches it. Below the app's
+ * own 1024px breakpoint the sidebar auto-collapses to a 56px rail, but a manual
+ * toggle re-expands it into a 280px *track*, which squeezes the centre column
+ * to 80px and the transcript to 16px on a 360px screen (measured).
+ *
+ * The frame carries no stable class name (CSS Modules hashes it), so it is
+ * matched structurally: it is the one element holding both the shell overlay
+ * layer and the right-bar column as direct children.
+ *
+ * Requires `:has()` (Chrome 105+). Where it is missing the whole block drops
+ * and the sidebar stays a track — the current behaviour, never worse.
+ */
+@media (max-width: 720px) {
+  :has(> [data-shell-overlay]):has(> [data-rightbar-col]) {
+    grid-template-columns: 56px minmax(0, 1fr) 0px !important;
+  }
+
+  /* Pin each column to its track. Once the sidebar leaves the flow the centre
+     column would otherwise slide up into the 56px rail slot. */
+  :has(> [data-shell-overlay]):has(> [data-rightbar-col]) > :first-child {
+    grid-area: 1 / 1;
+  }
+
+  :has(> [data-shell-overlay]):has(> [data-rightbar-col]) > :first-child + * {
+    grid-area: 1 / 2;
+  }
+
+  :has(> [data-shell-overlay]):has(> [data-rightbar-col]) > [data-rightbar-col] {
+    grid-area: 1 / 3;
+  }
+
+  /* Expanded (the app drops `data-sidebar-collapsed`): float the column over
+     the transcript instead of displacing it. The spread shadow is the scrim;
+     with no script to attach, closing stays with the rail's own toggle. */
+  :has(> [data-shell-overlay]):has(> [data-rightbar-col]):not([data-sidebar-collapsed]) > :first-child {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    width: min(280px, 86vw);
+    overflow: visible;
+    box-shadow: 0 0 0 100vmax rgb(0 0 0 / 50%);
   }
 }
 

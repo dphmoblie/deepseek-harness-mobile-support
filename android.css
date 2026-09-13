@@ -48,10 +48,14 @@ table {
     padding: var(--dsh-safe-top) var(--dsh-safe-right) var(--dsh-safe-bottom) var(--dsh-safe-left);
   }
 
+  /* Keep the percentage height chain intact: the official shell frame is
+     `height: 100%`, so an `auto` root collapses it and leaves dead space
+     below the transcript (observed on rc.2, 360px viewport). The safe-area
+     padding lives on `body`; its border-box sizing already subtracts that
+     from the root's percentage, so no viewport-unit min-height is needed. */
   #root {
-    height: auto;
-    min-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
-    min-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom));
+    height: 100%;
+    min-height: 0;
   }
 
   /* Below 16px the WebView zooms the page on focus and never zooms back. */
@@ -101,6 +105,49 @@ table {
     max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
     max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
     overscroll-behavior: contain;
+  }
+
+  /* The settings panel is a two-column flex row: a fixed 188px nav plus the
+     content column. On a 360-412px viewport the content keeps only ~100px and
+     Chinese copy wraps one glyph per line (observed on rc.2). Narrow screens
+     stack it: the nav becomes a horizontally scrollable tab strip and the
+     content takes the full width. Matched structurally via :has(> nav) so
+     only nav-bearing panels are affected; without :has() the rule drops and
+     the official two-column layout stays — never worse. */
+  [role='dialog']:has(> nav) {
+    flex-direction: column;
+  }
+
+  [role='dialog']:has(> nav) > nav {
+    width: 100%;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 12px 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  /* The panel title yields to the tabs in the horizontal strip. */
+  [role='dialog']:has(> nav) > nav > :first-child {
+    display: none;
+  }
+
+  [role='dialog']:has(> nav) > nav > :last-child {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  [role='dialog']:has(> nav) > nav button {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  [role='dialog']:has(> nav) > div {
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   #root,

@@ -52,6 +52,18 @@ spend 64px on margins.
 **Drops pointer-only affordances.** The transcript and column drag handles need
 a pointer-precise drag. On a touch screen they cannot be aimed and only misfire.
 
+**Keeps the root's height chain intact.** The official shell frame is
+`height: 100%`. An `auto` root (the layer briefly used one) collapses the frame
+to its content and leaves dead space below the transcript — measured on rc.2 at
+a 360px viewport. The root stays a definite height; the safe-area padding lives
+on `body`, whose border-box sizing already subtracts it.
+
+**Stacks the settings panel.** The official settings panel is a two-column flex
+row: a fixed 188px nav beside the content column. On a 360–412px viewport the
+content keeps about 100px and Chinese copy wraps one glyph per line. Narrow
+screens stack it — the nav becomes a horizontally scrollable tab strip and the
+content takes the full width.
+
 Safe-area insets, `100dvh` sizing, keyboard-safe dialog heights, momentum
 scrolling for code blocks and wide tables, and reduced-motion handling are also
 covered.
@@ -73,6 +85,13 @@ covered.
   name (CSS Modules hashes it), so it is matched structurally through
   `[data-shell-overlay]` and `[data-rightbar-col]`. Hashed class names are never
   referenced.
+- **Every contract is guarded.** All anchors this layer depends on (the `data-*`
+  attributes, CSS variables, and class names above) are declared in
+  `scripts/anchor-contract.mjs`. The build fails when the official frontend
+  loses a static anchor, and `scripts/check-runtime-anchors.mjs` does the same
+  for the runtime plugin tree. A silently dead rule is therefore impossible:
+  an upgrade either keeps the anchors or stops the build with the affected
+  rules named.
 
 ## Build
 
@@ -87,11 +106,19 @@ pnpm build
 The official frontend comes from `@deepseek-ai/dsh-web-frontend@0.1.5-rc.2`.
 The build validates every resource path in the official `index.html` — rejecting
 external entrypoints and directory traversal — before copying the package
-distribution into `dist/`.
+distribution into `dist/`. It also verifies the static anchors (see above).
+
+Before shipping a runtime image, check the plugin tree that will serve the
+frontend:
+
+```text
+node scripts/check-runtime-anchors.mjs <runtime-node-modules>
+```
 
 `pnpm test` asserts that every official file survives byte for byte, that the
-entrypoint is unchanged, that exactly one file is added, and that the rules
-above are present and correctly scoped.
+entrypoint is unchanged, that exactly one file is added, that the rules above
+are present and correctly scoped, and that both anchor guards fail loudly when
+an anchor disappears.
 
 The Android application consumes this repository as a pinned Git submodule.
 Generated `dist/` output and dependencies are not committed.

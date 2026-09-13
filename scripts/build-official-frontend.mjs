@@ -1,6 +1,7 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
+import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { STATIC_ANCHORS, findMissingAnchors, missingAnchorsMessage } from './anchor-contract.mjs'
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const sourceRoot = join(projectRoot, 'node_modules', '@deepseek-ai', 'dsh-web-frontend', 'dist')
@@ -11,6 +12,13 @@ const styleLink = '<link rel="stylesheet" href="/dsh-android.css" />'
 
 const sourceIndex = await readFile(join(sourceRoot, 'index.html'), 'utf8')
 validateOfficialIndex(sourceIndex)
+// 锚点契约校验：android.css 依赖的官方类名若被升级删除，构建立即失败，
+// 而不是让适配规则在真机上静默失效。
+const staticCorpus = await readTextAssets(sourceRoot, /\.(?:css|js)$/u)
+const missingStatic = findMissingAnchors(STATIC_ANCHORS, staticCorpus)
+if (missingStatic.length > 0) {
+  throw new Error(missingAnchorsMessage('官方前端 dist', missingStatic))
+}
 // 安全校验：只接受包内资源路径，拒绝外部入口和目录穿越；缺少资源时终止打包。
 const sourceAssets = [...sourceIndex.matchAll(/(?:src|href)="([^"]+)"/gu)].map(match => match[1])
 for (const path of sourceAssets) {
@@ -37,6 +45,16 @@ try {
 } catch (error) {
   await rm(temporaryRoot, { recursive: true, force: true })
   throw error
+}
+
+/** 递归读取 root 下匹配 pattern 的文本文件，拼接为一个语料串用于锚点搜索。 */
+async function readTextAssets(root, pattern) {
+  const chunks = []
+  for (const entry of await readdir(root, { recursive: true, withFileTypes: true })) {
+    if (!entry.isFile() || !pattern.test(entry.name)) continue
+    chunks.push(await readFile(resolve(entry.parentPath, entry.name), 'utf8'))
+  }
+  return chunks.join('\n')
 }
 
 function validateOfficialIndex(value) {

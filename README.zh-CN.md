@@ -69,7 +69,7 @@ pnpm test
 pnpm build
 ```
 
-官方前端来自 `@deepseek-ai/dsh-web-frontend@0.1.5-alpha.1`。构建会先校验官方
+官方前端来自 `@deepseek-ai/dsh-web-frontend@0.1.5-rc.2`。构建会先校验官方
 `index.html` 中的每个资源路径 —— 拒绝外部入口与目录穿越 —— 再把包内产物复制到 `dist/`。
 
 `pnpm test` 断言：官方文件逐字节留存、入口未被改动、仅新增一个文件，

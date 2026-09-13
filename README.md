@@ -84,7 +84,7 @@ pnpm test
 pnpm build
 ```
 
-The official frontend comes from `@deepseek-ai/dsh-web-frontend@0.1.5-alpha.1`.
+The official frontend comes from `@deepseek-ai/dsh-web-frontend@0.1.5-rc.2`.
 The build validates every resource path in the official `index.html` — rejecting
 external entrypoints and directory traversal — before copying the package
 distribution into `dist/`.

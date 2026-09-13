@@ -117,7 +117,10 @@ table {
   /* Width handles drive a pointer-precise drag (pointermove against a captured
      origin). On a touch screen they cannot be aimed and only misfire, so they
      leave the hit-testing tree. The collapsed 56px rail stays: it carries the
-     only control that reopens the sidebar. */
+     only control that reopens the sidebar.
+     Contract note: dsh 0.1.5-rc.2 renders every handle as [data-side] only;
+     the legacy [data-width-handle] name (alpha generation) is retained so the
+     same rule covers both frontend generations. */
   [data-width-handle],
   [data-side='sidebar'],
   [data-side='rightbar'] {

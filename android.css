@@ -107,49 +107,6 @@ table {
     overscroll-behavior: contain;
   }
 
-  /* The settings panel is a two-column flex row: a fixed 188px nav plus the
-     content column. On a 360-412px viewport the content keeps only ~100px and
-     Chinese copy wraps one glyph per line (observed on rc.2). Narrow screens
-     stack it: the nav becomes a horizontally scrollable tab strip and the
-     content takes the full width. Matched structurally via :has(> nav) so
-     only nav-bearing panels are affected; without :has() the rule drops and
-     the official two-column layout stays — never worse. */
-  [role='dialog']:has(> nav) {
-    flex-direction: column;
-  }
-
-  [role='dialog']:has(> nav) > nav {
-    width: 100%;
-    flex: 0 0 auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 12px 8px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-  }
-
-  /* The panel title yields to the tabs in the horizontal strip. */
-  [role='dialog']:has(> nav) > nav > :first-child {
-    display: none;
-  }
-
-  [role='dialog']:has(> nav) > nav > :last-child {
-    flex-direction: row;
-    gap: 6px;
-  }
-
-  [role='dialog']:has(> nav) > nav button {
-    width: auto;
-    flex: 0 0 auto;
-    white-space: nowrap;
-  }
-
-  [role='dialog']:has(> nav) > div {
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-
   #root,
   #root * {
     min-width: 0;
@@ -238,6 +195,94 @@ table {
   [role='dialog'] {
     max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
     max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 8px);
+  }
+}
+
+/* 官方 settings-general 的导航与正文是弹窗的两个直接子列。
+ * 以 navList 后缀定位设置弹窗，避免影响其他插件弹窗；不依赖 CSS 哈希前缀。
+ * 导航横向滚动，正文独立纵向滚动，关闭按钮始终留在可见的标题行。 */
+@media (max-width: 720px), (max-width: 960px) and (max-height: 520px) and (pointer: coarse) {
+  [role='dialog']:has([class*='_navList']) {
+    box-sizing: border-box;
+    width: calc(100vw - var(--dsh-safe-left) - var(--dsh-safe-right) - 16px) !important;
+    max-width: 800px !important;
+    min-width: 0 !important;
+    height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px) !important;
+    height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px) !important;
+    max-height: 800px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 18px;
+    overflow: hidden !important;
+  }
+
+  [role='dialog']:has([class*='_navList']) > :has(> [class*='_navList']) {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+    padding: 8px 10px 0 !important;
+    gap: 0 !important;
+    overflow: hidden;
+  }
+
+  /* 保留 aria-labelledby 指向的标题，视觉上为导航让出空间。 */
+  [role='dialog']:has([class*='_navList']) [class*='_navTitle'] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  [role='dialog']:has([class*='_navList']) [class*='_navList'] {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px;
+    min-width: 0;
+    width: 100%;
+    overflow-x: auto !important;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  [role='dialog']:has([class*='_navList']) [class*='_navCell'] {
+    flex: 0 0 auto !important;
+    height: 44px;
+    white-space: nowrap;
+  }
+
+  [role='dialog']:has([class*='_navList']) > [class*='_content'] {
+    width: 100% !important;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 0% !important;
+    overflow: hidden;
+  }
+
+  [role='dialog']:has([class*='_navList']) > [class*='_content'] > [class*='_header'] {
+    height: 44px;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 6px 12px;
+  }
+
+  [role='dialog']:has([class*='_navList']) > [class*='_content'] > [class*='_options'] {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 0%;
+    padding: 0 14px 16px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+  }
+
+  [role='dialog']:has([class*='_navList']) [data-slot='settings.section'],
+  [role='dialog']:has([class*='_navList']) [data-slot='settings.plugins.tab'] {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 

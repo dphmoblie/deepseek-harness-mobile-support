@@ -22,6 +22,10 @@ export const STATIC_ANCHORS = [
 
 /** 运行时锚点：来自客户端 UI 插件产物（dsh-client-ui-* 等，由 ModuleLoader 加载）。 */
 export const RUNTIME_ANCHORS = [
+  { token: '_navList', purpose: '设置导航横向滚动与弹窗定位' },
+  { token: '_navCell', purpose: '设置分类固定触控宽度，避免文字被挤压' },
+  { token: '_content', purpose: '设置正文全宽与独立滚动' },
+  { token: '_options', purpose: '设置表单滚动区域，保留关闭按钮' },
   { token: 'data-shell-overlay', purpose: '侧栏抽屉的 frame 结构匹配（:has(> [data-shell-overlay])）' },
   { token: 'data-rightbar-col', purpose: '侧栏抽屉的 frame 结构匹配（:has(> [data-rightbar-col])）' },
   { token: 'data-sidebar-collapsed', purpose: '侧栏展开/折叠态判定（覆盖式抽屉仅在展开态生效）' },

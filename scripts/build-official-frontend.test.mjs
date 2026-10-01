@@ -77,10 +77,18 @@ test('every !important stays inside a narrow-viewport or coarse-pointer query', 
 test('the sidebar drawer keeps the rail reachable and degrades without :has()', async () => {
   const css = await readFile(resolve(projectRoot, 'android.css'), 'utf8')
   // The frame has no stable class name, so it is matched structurally.
-  assert.match(css, /:has\(>\s*\[data-shell-overlay\]\):has\(>\s*\[data-rightbar-col\]\)/u)
+  // 双向兼容：两侧各是一个 :is() 分组，左栏认 data-shell-overlay 或 data-side="sidebar"，
+  // 右栏认 data-rightbar-col 或 data-side="rightbar"，同一套标记的任一世代都能命中。
+  assert.match(
+    css,
+    /:is\(:has\(>\s*\[data-shell-overlay\]\),\s*:has\(>\s*\[data-side='sidebar'\]\)\):is\(:has\(>\s*\[data-rightbar-col\]\),\s*:has\(>\s*\[data-side='rightbar'\]\)\)/u,
+  )
   // The 56px rail carries the only control that reopens the sidebar; hiding
   // the sidebar column outright would trap the user in the transcript.
   assert.doesNotMatch(css, /\[data-shell-overlay\]\)[^{]*>\s*:first-child\s*\{[^}]*display:\s*none/u)
   // Pointer-only drag handles are the ones that go.
   assert.match(css, /\[data-width-handle\][\s\S]*display:\s*none\s*!important/u)
+  // 遮罩必须是真图层：抽屉自己的 ::after，且永不抢点击；box-shadow 假遮罩不许回来。
+  assert.match(css, /:not\(\[data-sidebar-collapsed\]\)\s*>\s*:first-child::after\s*\{[^}]*pointer-events:\s*none/u)
+  assert.doesNotMatch(css, /100vmax/u)
 })

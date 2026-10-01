@@ -65,8 +65,15 @@
 - **优雅降级。** 抽屉依赖 `:has()`（Chrome 105+）。不支持时该规则块整体失效、
   侧栏退回轨道形态 —— 即当前行为，不会比现状更差。
 - **只使用稳定契约选择器。** frame 元素没有稳定类名（被 CSS Modules 哈希），
-  故通过 `[data-shell-overlay]` 与 `[data-rightbar-col]` 结构化命中。
-  绝不引用哈希类名。
+  故通过两组 `:is()` 结构化命中：左栏标记是 `[data-shell-overlay]` 或
+  `[data-side='sidebar']`，右栏标记是 `[data-rightbar-col]` 或
+  `[data-side='rightbar']`。同一套标记的两个世代都能命中，也不再要求某一侧必须
+  单独出现。插件页面不是 iframe（与外壳共用同一份布局插件产物），因此没有
+  「插件专用标记名」可加。绝不引用哈希类名。
+- **遮罩是真图层。** 抽屉用自己的 `::after`（`position: fixed`、
+  `pointer-events: none`、`z-index: -1`）画遮罩，不再用 100vmax 的 `box-shadow`
+  扩散冒充：影子不参与命中测试，看起来像遮罩、实际什么也没挡。这层永不抢点击；
+  本层不使用 JavaScript，所以「点遮罩关闭」依然不存在。
 - **每条契约都有守卫。** 本层依赖的全部锚点（上述 `data-*` 属性、CSS 变量与类名）
   集中声明在 `scripts/anchor-contract.mjs`。官方前端丢失静态锚点时构建直接失败；
   运行时插件树由 `scripts/check-runtime-anchors.mjs` 做同样的校验。规则静默失效

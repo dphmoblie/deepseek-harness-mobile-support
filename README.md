@@ -82,9 +82,18 @@ covered.
   missing the block drops and the sidebar stays a track — today's behaviour,
   never worse.
 - **Selectors are stable contracts only.** The frame carries no stable class
-  name (CSS Modules hashes it), so it is matched structurally through
-  `[data-shell-overlay]` and `[data-rightbar-col]`. Hashed class names are never
-  referenced.
+  name (CSS Modules hashes it), so it is matched structurally through two
+  `:is()` groups: the left marker is `[data-shell-overlay]` or
+  `[data-side='sidebar']`, the right marker is `[data-rightbar-col]` or
+  `[data-side='rightbar']`. Both generations of the same marker set therefore
+  match, and neither side is required to be the only one rendered. Plugin pages
+  are not iframes and share the same layout plugin, so no plugin-only marker
+  name exists to add. Hashed class names are never referenced.
+- **The scrim is a real layer.** The drawer paints its own `::after`
+  (`position: fixed`, `pointer-events: none`, `z-index: -1`) instead of using a
+  100vmax `box-shadow` spread as a fake scrim: a shadow is never hit-tested, so
+  it looked like an overlay while blocking nothing. The layer never eats taps,
+  and click-to-close still does not exist — there is no JavaScript here.
 - **Every contract is guarded.** All anchors this layer depends on (the `data-*`
   attributes, CSS variables, and class names above) are declared in
   `scripts/anchor-contract.mjs`. The build fails when the official frontend

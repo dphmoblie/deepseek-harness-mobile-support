@@ -16,6 +16,12 @@ body,
   width: 100%;
 }
 
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   overscroll-behavior: none;
@@ -39,11 +45,28 @@ table {
   overscroll-behavior-x: contain;
 }
 
+/* The official renderer supplies the scroll container, but a WebView still
+   needs an explicit touch path for long code and wide result tables. */
+.md-code-block,
+.md-table-wide,
+pre {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dsw-alias-scrollbar-bg-l2, rgb(128 128 128 / 45%)) transparent;
+}
+
 /* The official bundle styles controls through CSS-Modules hash classes
    (specificity 0,1,0), so bare element selectors below never win. Touch-target
    and anti-zoom rules therefore carry `!important`, scoped to narrow viewports
    and coarse pointers only: desktop and tablet keep the official metrics. */
 @media (max-width: 720px) {
+  /* Keep keyboard navigation visible even where an official control only
+     changes its background on focus. */
+  :where(button, [role='button'], [role='tab'], [role='menuitem'], a, input, select, textarea, [contenteditable='true']):focus-visible {
+    outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary, #4c8dff));
+    outline-offset: 2px;
+  }
+
   body {
     padding: var(--dsh-safe-top) var(--dsh-safe-right) var(--dsh-safe-bottom) var(--dsh-safe-left);
   }
@@ -64,6 +87,21 @@ table {
   textarea {
     font-size: max(16px, 1em) !important;
     max-width: 100%;
+    line-height: 1.45;
+  }
+
+  /* Do not let a long prompt push the transcript off-screen. The composer
+     keeps its own scroll position while the rest of the shell remains still. */
+  [data-phase] :is(textarea, [contenteditable='true']) {
+    max-height: min(32dvh, 240px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    overflow-wrap: anywhere;
+  }
+
+  [data-phase] :is(textarea, [contenteditable='true']):focus-visible {
+    outline-offset: 1px;
   }
 
   /* The official UI packs icon controls at 16-28px on fixed `height`, which a
@@ -102,9 +140,16 @@ table {
   [role='dialog'],
   [role='menu'],
   [data-radix-popper-content-wrapper] {
+    box-sizing: border-box;
     max-height: calc(100vh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
     max-height: calc(100dvh - var(--dsh-safe-top) - var(--dsh-safe-bottom) - 16px);
+    max-width: calc(100vw - var(--dsh-safe-left) - var(--dsh-safe-right) - 16px);
+    min-width: 0;
     overscroll-behavior: contain;
+  }
+
+  [role='dialog'] > * {
+    min-width: 0;
   }
 
   #root,
@@ -116,6 +161,26 @@ table {
   pre {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+  }
+
+  .md-table-wide {
+    border-radius: var(--dsw-radius-sm, 6px);
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 8px;
+  }
+
+  .md-table-wide > table {
+    min-width: max-content;
+  }
+
+  .md-table-wide :is(th, td) {
+    min-width: 88px;
+    padding-inline: 8px;
+  }
+
+  .md-code-block pre {
+    max-width: 100%;
+    margin-inline: 0;
   }
 
   /* Width handles drive a pointer-precise drag (pointermove against a captured

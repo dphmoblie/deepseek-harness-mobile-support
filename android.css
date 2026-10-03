@@ -104,38 +104,10 @@ pre {
     outline-offset: 1px;
   }
 
-  /* The official UI packs icon controls at 16-28px on fixed `height`, which a
-     44px `min-height` would beat and burst out of its dense rows. Grow the hit
-     area with a centered pseudo-element instead: the tap target reaches 44px
-     while the layout box keeps the official metrics. Neither official
-     stylesheet declares a single `::after`, so nothing is overwritten. */
-  button,
-  [role='button'],
-  [role='tab'],
-  [role='menuitem'],
-  input[type='button'],
-  input[type='submit'],
-  input[type='reset'] {
-    position: relative;
-  }
-
-  button::after,
-  [role='button']::after,
-  [role='tab']::after,
-  [role='menuitem']::after,
-  input[type='button']::after,
-  input[type='submit']::after,
-  input[type='reset']::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    transform: translate(-50%, -50%);
-    /* Hit area only: never paints, never intercepts the parent's own hover. */
-    pointer-events: auto;
-  }
+  /* Do not fabricate larger hit areas with absolutely positioned pseudo
+     elements. Adjacent icon buttons then overlap, and the later one steals
+     the earlier one's taps (especially in confirmation dialogs). The official
+     control bounds remain the only interactive bounds. */
 
   [role='dialog'],
   [role='menu'],

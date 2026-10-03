@@ -40,10 +40,10 @@ test('Android adaptation stylesheet covers safe areas and mobile interaction con
   assert.match(css, /100dvh/u)
   assert.match(css, /\.md-code-block[\s\S]*overflow-x:\s*auto/u)
   assert.match(css, /prefers-reduced-motion/u)
-  // Tap targets grow through a pseudo-element: a 44px `min-height` would beat
-  // the official 16-28px fixed `height` and burst the dense icon rows.
-  assert.match(css, /::after[\s\S]*max\(100%,\s*44px\)/u)
-  assert.doesNotMatch(css, /min-height:\s*44px/u)
+  // Never use an expanded, invisible pseudo-element as a hit target: adjacent
+  // icon controls can overlap and steal each other's taps in a WebView.
+  assert.doesNotMatch(css, /button::after/u)
+  assert.doesNotMatch(css, /width:\s*max\(100%,\s*44px\)/u)
   // Anti-zoom needs !important: the official controls are styled through
   // CSS-Modules hash classes, which outrank a bare element selector.
   assert.match(css, /font-size:\s*max\(16px,\s*1em\)\s*!important/u)

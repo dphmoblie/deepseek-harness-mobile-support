@@ -124,8 +124,12 @@ pre {
     min-width: 0;
   }
 
-  #root,
-  #root * {
+  /* 只给根节点保留 min-width:0。此前的 `#root *` 是 ID 级特异性（1,0,0），会压过
+     官方一切类选择器的 min-width —— 连本文件自己声明的
+     `.md-table-wide > table{min-width:max-content}` 也被它反压，导致官方依赖最小
+     宽度的列/宽表格一并塌缩（真机上表现为文字被挤成逐字换行）。外壳三列的最小宽度
+     改由下方三条列规则各自声明，官方后代的 min-width 语义归还给官方。 */
+  #root {
     min-width: 0;
   }
 
@@ -215,17 +219,22 @@ pre {
   }
 
   /* Pin each column to its track. Once the sidebar leaves the flow the centre
-     column would otherwise slide up into the 56px rail slot. */
+     column would otherwise slide up into the 56px rail slot.
+     这里同时承担三列的 min-width:0（原先由 `#root *` 全局代劳）：grid 项默认
+     `min-width: auto`，不给 0 的话 1fr 轨道压不过内容的最小宽度。 */
   :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar'])) > :first-child {
     grid-area: 1 / 1;
+    min-width: 0;
   }
 
   :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar'])) > :first-child + * {
     grid-area: 1 / 2;
+    min-width: 0;
   }
 
   :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar'])) > [data-rightbar-col] {
     grid-area: 1 / 3;
+    min-width: 0;
   }
 
   /* Expanded (the app drops `data-sidebar-collapsed`): float the column over

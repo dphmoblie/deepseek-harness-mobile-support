@@ -4,6 +4,11 @@
 > It exists only until the official DeepSeek Harness web frontend ships its own
 > mobile layout. On that day this repository is archived, the Android app drops
 > the submodule, and every rule below is deleted rather than migrated.
+>
+> **Checked 2026-10-17 against 0.2.1-rc.1**: the official frontend bundle still
+> has only a `prefers-reduced-motion` `@media` block — no narrow breakpoints,
+> safe-area handling, or drawer sidebar — so this layer stays. Evidence and
+> re-check commands: `docs/官方dsh移动端核对-0.2.1.md` in the app repo.
 
 An Android/WebView adaptation layer for the official DeepSeek Harness web
 frontend. The official bundle is **never modified**: the build copies it

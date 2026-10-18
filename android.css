@@ -359,6 +359,41 @@ pre {
   }
 }
 
+/*
+ * 外壳同步过来的背景。原生侧 HarnessThemeBridge 只写 --dsh-theme-* 变量，
+ * 这里负责把它们变成看得见的一层：
+ *
+ * - 图片走 body::before，video 走独立元素——都贴在内容下面、不吃点击
+ * - 只对 data-dsh-theme-source='shell' 的页面生效：没同步过主题时，
+ *   这些规则一条都不该碰到官方界面
+ */
+html[data-dsh-theme-source='shell'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--dsh-theme-background-image, none);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--dsh-theme-surface-opacity, 1);
+}
+
+html[data-dsh-theme-source='shell'] body {
+  background-color: var(--dsh-theme-background, transparent);
+}
+
+video[data-dsh-shell-background] {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  opacity: var(--dsh-theme-surface-opacity, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

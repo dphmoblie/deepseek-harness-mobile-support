@@ -360,6 +360,25 @@ pre {
 }
 
 /*
+ * 明暗与强调色：只对齐浏览器自带外观（表单控件、滚动条、focus ring），
+ * 不重写官方调色板——访客页面自己的主题仍然生效，外壳只在外层对齐「现在是深还是浅」。
+ *
+ * system 模式不写 color-scheme：那一刻的深浅是外壳的结论，固化下来会让页面
+ * 在系统切换后不再跟随。
+ */
+html[data-dsh-theme-source='shell'][data-dsh-theme='dark'] {
+  color-scheme: dark;
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme='light'] {
+  color-scheme: light;
+}
+
+html[data-dsh-theme-source='shell'] {
+  accent-color: var(--dsh-theme-accent, auto);
+}
+
+/*
  * 外壳同步过来的背景。原生侧 HarnessThemeBridge 只写 --dsh-theme-* 变量，
  * 这里负责把它们变成看得见的一层：
  *

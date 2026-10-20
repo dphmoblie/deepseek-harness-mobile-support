@@ -379,13 +379,37 @@ html[data-dsh-theme-source='shell'] {
 }
 
 /*
- * 外壳同步过来的背景。原生侧 HarnessThemeBridge 只写 --dsh-theme-* 变量，
+ * 外壳同步过来的主题与背景。原生侧 HarnessThemeBridge 只写 --dsh-theme-* 变量，
  * 这里负责把它们变成看得见的一层：
  *
- * - 图片走 body::before，video 走独立元素——都贴在内容下面、不吃点击
+ * - 底色挪到 html、body 保持透明：body::before 的 z-index 是 -1，body 自己再涂一层
+ *   不透明底色会把背景图整张盖住（此前「同步了却看不到背景」就是这个原因）。
+ * - 图片走 body::before，video 走独立元素——都贴在内容下面、不吃点击。
+ * - 官方 UI 的面板读 --dsw-alias-bg-*，只写 --dsh-theme-* 不会改变任何一块面板；
+ *   这里把同步色接进官方令牌，按 surfaceOpacity 调成半透明，背景层才透得出来。
  * - 只对 data-dsh-theme-source='shell' 的页面生效：没同步过主题时，
- *   这些规则一条都不该碰到官方界面
+ *   这些规则一条都不该碰到官方界面。
  */
+html[data-dsh-theme-source='shell'] {
+  background-color: var(--dsh-theme-background, transparent);
+  /* 没有背景媒体时基色就是同步过来的底色；有媒体时让基色透明，背景层才看得见。 */
+  --dsw-alias-bg-base: var(--dsh-theme-background);
+  /*
+   * 面板层固定半透明：官方聊天区几乎每一块都读这几个令牌。完全不透明会把背景整张盖住，
+   * 而跟着「卡片不透明度」走又会在默认 100% 时同样盖住——这里选一个既能透出背景、
+   * 又保证正文可读的折中，深浅两套主题都适用。
+   */
+  --dsw-alias-bg-layer-1: color-mix(in srgb, var(--dsh-theme-surface) 92%, transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) 76%, transparent);
+  --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) 68%, transparent);
+}
+
+/* 同步了图片 / 视频：基色让出一大半给背景层，同时保留一层薄底保证正文可读。 */
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] {
+  --dsw-alias-bg-base: color-mix(in srgb, var(--dsh-theme-background) 82%, transparent);
+}
+
 html[data-dsh-theme-source='shell'] body::before {
   content: '';
   position: fixed;
@@ -395,11 +419,12 @@ html[data-dsh-theme-source='shell'] body::before {
   background-image: var(--dsh-theme-background-image, none);
   background-position: center;
   background-size: cover;
-  opacity: var(--dsh-theme-surface-opacity, 1);
+  opacity: 1;
 }
 
 html[data-dsh-theme-source='shell'] body {
-  background-color: var(--dsh-theme-background, transparent);
+  /* 透明是这套分层的前提：见上面的说明，body 一旦有不透明底色，背景层就看不见。 */
+  background-color: transparent;
 }
 
 video[data-dsh-shell-background] {
@@ -410,7 +435,6 @@ video[data-dsh-shell-background] {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  opacity: var(--dsh-theme-surface-opacity, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {

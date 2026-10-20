@@ -403,6 +403,13 @@ html[data-dsh-theme-source='shell'] {
   --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
   --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) 76%, transparent);
   --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) 68%, transparent);
+  /*
+   * 按钮与输入框：官方只暴露 fill/hover/active 这几个按钮令牌，输入框与按钮共用同一族交互底色。
+   * --dsh-theme-control-opacity 来自外壳的「按钮与输入框不透明度」，与面板透明度分开。
+   */
+  --dsw-alias-button-primary-fill: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 100%), transparent);
+  --dsw-alias-interactive-bg-hover: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 55%), transparent);
+  --dsw-alias-interactive-bg-active: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 70%), transparent);
 }
 
 /* 同步了图片 / 视频：基色让出一大半给背景层，同时保留一层薄底保证正文可读。 */

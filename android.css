@@ -391,6 +391,7 @@ html[data-dsh-theme-source='shell'] {
  *   这些规则一条都不该碰到官方界面。
  */
 html[data-dsh-theme-source='shell'] {
+  isolation: isolate;
   background-color: var(--dsh-theme-background, transparent);
   /* 没有背景媒体时基色就是同步过来的底色；有媒体时让基色透明，背景层才看得见。 */
   --dsw-alias-bg-base: var(--dsh-theme-background);
@@ -403,13 +404,18 @@ html[data-dsh-theme-source='shell'] {
   --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
   --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) 76%, transparent);
   --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) 68%, transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
   /*
    * 按钮与输入框：官方只暴露 fill/hover/active 这几个按钮令牌，输入框与按钮共用同一族交互底色。
    * --dsh-theme-control-opacity 来自外壳的「按钮与输入框不透明度」，与面板透明度分开。
    */
   --dsw-alias-button-primary-fill: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 100%), transparent);
+  --dsw-alias-button-primary-hover: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 82%), transparent);
+  --dsw-alias-button-primary-active: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 72%), transparent);
   --dsw-alias-interactive-bg-hover: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 55%), transparent);
   --dsw-alias-interactive-bg-active: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 70%), transparent);
+  --dsw-alias-button-ghost-active-fill: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 70%), transparent);
+  --dsw-alias-button-ghost-active-border: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 62%), transparent);
 }
 
 /* 同步了图片 / 视频：基色让出一大半给背景层，同时保留一层薄底保证正文可读。 */
@@ -421,7 +427,7 @@ html[data-dsh-theme-source='shell'] body::before {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   background-image: var(--dsh-theme-background-image, none);
   background-position: center;
@@ -432,12 +438,20 @@ html[data-dsh-theme-source='shell'] body::before {
 html[data-dsh-theme-source='shell'] body {
   /* 透明是这套分层的前提：见上面的说明，body 一旦有不透明底色，背景层就看不见。 */
   background-color: transparent;
+  position: relative;
+  isolation: isolate;
+}
+
+html[data-dsh-theme-source='shell'] #root {
+  position: relative;
+  z-index: 1;
+  background: transparent;
 }
 
 video[data-dsh-shell-background] {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

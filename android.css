@@ -218,6 +218,76 @@ pre {
     grid-template-columns: 56px minmax(0, 1fr) 0px !important;
   }
 
+  /*
+   * 收起态不保留 56px 导轨：三条轨道里的第一条收成 0，正文从屏幕左边缘开始。
+   *
+   * 展开入口仍然交给**原生鲸鱼按钮**，不另造按钮：把导轨绝对定位、透明化，并让整列
+   * 不接收触摸，只把导轨里的 toggle 恢复可见可点。这样它既是收起时的展开入口，展开后
+   * 也还是抽屉里原来那颗按钮，状态只有官方一份，不会出现「两个按钮互相覆盖」。
+   *
+   * 用 visibility 而不是 display:none：visibility 可被子节点覆盖，才可能只放出按钮；
+   * display:none 的祖先会把按钮一起关掉。导轨宽度保持 56px 而不收成 0，是为了让原生
+   * 按钮留在它原来的位置，也不会被导轨自身的 overflow 裁掉。
+   */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] {
+    grid-template-columns: 0px minmax(0, 1fr) 0px !important;
+  }
+
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] > :first-child {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 31;
+    width: 56px;
+    min-width: 0;
+    /* 导轨本身（含背景、边框、阴影）全让出来，只留按钮。 */
+    pointer-events: none;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* 导轨里的其它入口先整体隐藏；toggle 在下面单独恢复可见。 */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] > :first-child * {
+    visibility: hidden;
+  }
+
+  /* 原生鲸鱼按钮：唯一可见、唯一可点的导轨元素。 */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] > :first-child :is(button[class*='_toggle'], button[aria-label*='侧边栏'], button[aria-label*='sidebar' i]) {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /*
+   * 按钮本身恢复可见还不够：visibility 是继承属性，上面 `*` 规则已经给图标
+   * （按钮里的 svg / span）落了 hidden，子元素不会因为父元素变成 visible 就跟着回来。
+   * 这里把按钮内部整棵子树一并放出，鲸鱼图标才不会变成一个空方块。
+   */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] > :first-child :is(button[class*='_toggle'], button[aria-label*='侧边栏'], button[aria-label*='sidebar' i]) * {
+    visibility: visible;
+  }
+
+  /*
+   * 顶栏给鲸鱼按钮让位。
+   *
+   * 收起后导轨不再占轨道，中栏从屏幕左边缘开始；而鲸鱼按钮仍停在导轨原位
+   * （实测 10,18，36×36），官方顶栏的左边距只有 20px——按钮因此压住会话面包屑
+   * 左端和「对话」标签的左上角（真机测量：面包屑 20..94、标签行 20..335，
+   * 按钮 10..46）。
+   *
+   * 只给**中栏里的顶栏**补 54px 左内边距：标题行与标签行整体退到按钮右侧
+   * （54 > 46，留 8px 间隙），顶栏高度、右侧工具按钮、下方正文与输入框的位置
+   * 全部不变。不把留白挪到中栏本身，是为了让正文保持满宽（这是收起导轨的初衷）。
+   *
+   * 选择器沿用本文件的结构锚定（中栏 = frame 的第一个子元素之后的那个），
+   * 并以 `header[class*='_header']` 收窄到官方顶栏，避免误伤正文里其它 header。
+   * 54px 是按钮实测右缘 46px 加 8px 间隙；若官方调整按钮尺寸需同步复核。
+   */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed] > :first-child + * header[class*='_header'] {
+    padding-left: 54px !important;
+  }
+
   /* Pin each column to its track. Once the sidebar leaves the flow the centre
      column would otherwise slide up into the 56px rail slot.
      这里同时承担三列的 min-width:0（原先由 `#root *` 全局代劳）：grid 项默认
@@ -393,22 +463,27 @@ html[data-dsh-theme-source='shell'] {
 html[data-dsh-theme-source='shell'] {
   isolation: isolate;
   background-color: var(--dsh-theme-background, transparent);
-  /* 没有背景媒体时基色就是同步过来的底色；有媒体时让基色透明，背景层才看得见。 */
+}
+
+/*
+ * 令牌必须落在 body：官方调色板把同名的 --dsw-alias-* 声明在 body 与
+ * body[data-ds-dark-theme] 上（dsh-client-ui-theme），自定义属性只对声明元素及其后代生效，
+ * 写在 html 上不会传给任何面板——这正是「主题同步了、DSH 一点不变」的根因。
+ * 选择器权重 0,1,2 高于 body[data-ds-dark-theme] 的 0,1,1，能压过官方深浅两套值。
+ */
+html[data-dsh-theme-source='shell'] body {
   --dsw-alias-bg-base: var(--dsh-theme-background);
+  --dsw-alias-bg-layer-1: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 92%), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 84%), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 76%), transparent);
+  --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 68%), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 84%), transparent);
   /*
-   * 面板层固定半透明：官方聊天区几乎每一块都读这几个令牌。完全不透明会把背景整张盖住，
-   * 而跟着「卡片不透明度」走又会在默认 100% 时同样盖住——这里选一个既能透出背景、
-   * 又保证正文可读的折中，深浅两套主题都适用。
+   * 侧栏底色走独立一项：官方用 --dsw-specific-sidebar-fill 画整列（布局插件
+   * `.sidebarCol{background:var(--dsw-specific-sidebar-fill)}`）。它与正文面板的
+   * 「遮盖背景视频的透明度」分开调，才能让侧栏透出背景而正文仍然读得清。
    */
-  --dsw-alias-bg-layer-1: color-mix(in srgb, var(--dsh-theme-surface) 92%, transparent);
-  --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
-  --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) 76%, transparent);
-  --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) 68%, transparent);
-  --dsw-alias-bg-module-platform: color-mix(in srgb, var(--dsh-theme-surface) 84%, transparent);
-  /*
-   * 按钮与输入框：官方只暴露 fill/hover/active 这几个按钮令牌，输入框与按钮共用同一族交互底色。
-   * --dsh-theme-control-opacity 来自外壳的「按钮与输入框不透明度」，与面板透明度分开。
-   */
+  --dsw-specific-sidebar-fill: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-sidebar-opacity, 1) * 100%), transparent);
   --dsw-alias-button-primary-fill: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 100%), transparent);
   --dsw-alias-button-primary-hover: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 82%), transparent);
   --dsw-alias-button-primary-active: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 72%), transparent);
@@ -418,9 +493,96 @@ html[data-dsh-theme-source='shell'] {
   --dsw-alias-button-ghost-active-border: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 62%), transparent);
 }
 
-/* 同步了图片 / 视频：基色让出一大半给背景层，同时保留一层薄底保证正文可读。 */
+/*
+ * 同步了图片 / 视频：底衬让给背景层。
+ *
+ * 之前这里只是把基色降到 82%，面板层又固定 92/84/76/68%——一层层叠上去，背景等于没显示
+ * （用户实测：同步了背景，但界面上一点都看不到）。有媒体时基色直接透明，面板层按层级降到
+ * 40%~60%，正文仍落在半透明底板上，背景能从缝隙里透出来。
+ */
+/*
+ * 有背景媒体时把底衬彻底让出来：html 透明、背景层 z-index 拉到 -1。
+ * 之前用 z-index: 0 靠给 body 子节点加 z-index 兜，遇到官方根节点自带层叠上下文时
+ * 仍然会被背景盖住（实测：背景跑到最上层，UI 全被遮住）。
+ */
 html[data-dsh-theme-source='shell'][data-dsh-theme-media] {
-  --dsw-alias-bg-base: color-mix(in srgb, var(--dsh-theme-background) 82%, transparent);
+  background-color: transparent;
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] body::before {
+  z-index: -1;
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] body {
+  --dsw-alias-bg-base: transparent;
+  /*
+   * 有背景媒体时不再用固定百分比：外壳里的「遮盖背景视频的界面不透明度」直接乘进来，
+   * 默认 100% 时与原来一致，调低才会真正让视频透出来。
+   */
+  --dsw-alias-bg-layer-1: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 62%), transparent);
+  --dsw-alias-bg-layer-2: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 52%), transparent);
+  --dsw-alias-bg-layer-3: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 44%), transparent);
+  --dsw-alias-bg-layer-4: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 36%), transparent);
+  --dsw-alias-bg-module-platform: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 52%), transparent);
+}
+
+/*
+ * 玻璃层：顶栏、右侧面板与会话区。
+ *
+ * 背景图 / 视频透出来之后，这些区域都直接压在画面上：顶栏官方只有一条分隔线；
+ * 右侧面板（右上角按钮打开的「开始 / 工作区文件」）读的是 `--dsw-alias-bg-base`，
+ * 而有媒体时该令牌被置为 transparent，整层面板等于没有底（用户反馈：右侧完全透明）。
+ *
+ * 三处各取不同的透明度来源，互不牵连：
+ * - 顶栏：跟「遮盖背景的界面不透明度」走，底部留一段渐隐，不在标题处切一刀；
+ * - 右侧面板：独立一项 `--dsh-theme-right-panel-opacity`（外壳新增的滑杆），
+ *   与左侧侧栏分开调；
+ * - 会话区：同一项界面透明度再乘 18%，只铺很轻的一层，正文仍然读得清。
+ *
+ * 顶栏只匹配带标签行的会话顶栏（:has(_tabs)），新建会话的空白顶栏不铺底衬。
+ * 右侧面板必须限定在真正打开时（data-rightbar-fullscreen，或非收起态）：
+ * 面板关闭后容器仍以全屏尺寸留在 DOM 里，给它上底色会盖住整个界面（实测）。
+ * backdrop-filter 不被支持时自然退化成半透明底色，不会白屏。
+ */
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] [class*='_centerCol'] header[class*='_header']:has([class*='_tabs']) {
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 86%), transparent) 0,
+    color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 78%), transparent) calc(100% - 12px),
+    transparent 100%
+  );
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+  backdrop-filter: blur(10px) saturate(1.08);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--dsh-theme-surface) 22%, transparent);
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] :is([data-rightbar-fullscreen], [data-rightbar-collapsed='false']) [data-rightbar-col] [class*='_surface_'] {
+  background: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-right-panel-opacity, 0.4) * 100%), transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-media] [class*='_centerCol'] {
+  background: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-surface-opacity, 1) * 18%), transparent);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
+  backdrop-filter: blur(6px) saturate(1.05);
+}
+
+/*
+ * 背景视频：预载脚本把它插在 body 第一个子节点。这里固定住定位与层级——
+ * 之前一条 body > * { position: relative; z-index: 1 } 把它从 fixed 改成 relative，
+ * 视频于是进入文档流、盖住整个 UI（实测「勾选背景后全部组件被遮住」）。
+ */
+html[data-dsh-theme-source='shell'] video[data-dsh-shell-background] {
+  /* 不再需要 !important：上面那条会改写背景视频层级的 `body > *` 规则已经移除。
+     这个选择器本身的权重（0,2,2）已高于文件末尾的通用 video 规则（0,1,1）。 */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  pointer-events: none;
 }
 
 html[data-dsh-theme-source='shell'] body::before {

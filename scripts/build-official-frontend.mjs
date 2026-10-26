@@ -9,6 +9,9 @@ const outputRoot = join(projectRoot, 'dist')
 const temporaryRoot = join(projectRoot, '.dist-android')
 const marker = '<meta name="dsh-official-frontend" content="android-adapted-v1" />'
 const styleLink = '<link rel="stylesheet" href="/dsh-android.css" />'
+// 经典脚本在解析到标签时立即执行；官方入口是 type="module"（默认 defer），
+// 因此放在 </head> 前也能保证先写 localStorage、再去掉片段重新加载。
+const sessionScript = '<script src="/dsh-mobile-session.js"></script>'
 
 const sourceIndex = await readFile(join(sourceRoot, 'index.html'), 'utf8')
 validateOfficialIndex(sourceIndex)
@@ -34,9 +37,10 @@ try {
   await cp(sourceRoot, temporaryRoot, { recursive: true, force: true })
   const adaptedIndex = sourceIndex
     .replace('content="width=device-width, initial-scale=1"', 'content="width=device-width, initial-scale=1, viewport-fit=cover"')
-    .replace('</head>', `    ${marker}\n    ${styleLink}\n  </head>`)
+    .replace('</head>', `    ${sessionScript}\n    ${marker}\n    ${styleLink}\n  </head>`)
   await writeFile(join(temporaryRoot, 'index.html'), adaptedIndex, 'utf8')
   await cp(join(projectRoot, 'android.css'), join(temporaryRoot, 'dsh-android.css'))
+  await cp(join(projectRoot, 'dsh-mobile-session.js'), join(temporaryRoot, 'dsh-mobile-session.js'))
 
   // Windows directory watchers can hold rename handles; copy the validated staging tree.
   await rm(outputRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })

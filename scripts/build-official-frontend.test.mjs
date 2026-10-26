@@ -21,17 +21,22 @@ test('built Android frontend preserves every official resource and has one entry
   }
   const index = await readFile(resolve(outputRoot, 'index.html'), 'utf8')
   const original = await readFile(resolve(sourceRoot, 'index.html'), 'utf8')
-  const scripts = html => [...html.matchAll(/<script\b[^>]*src="([^"]+)"/gu)].map(match => match[1])
+  const scripts = html => [...html.matchAll(/<script\b[^>]*src="([^"]+)"/gu)]
+    .map(match => match[1])
+    .filter(src => src !== '/dsh-mobile-session.js')
   assert.deepEqual(scripts(index), scripts(original), 'must use the original app entrypoint')
   assert.match(index, /name="dsh-official-frontend" content="android-adapted-v1"/)
   assert.match(index, /viewport-fit=cover/)
   assert.equal(index.match(/href="\/dsh-android.css"/gu)?.length, 1)
+  assert.equal(index.match(/src="\/dsh-mobile-session\.js"/gu)?.length, 1)
   assert.doesNotMatch(index, /dsh-mobile-frontend|plugin-workbench|\/src\//u)
   const outputFiles = await readdir(outputRoot, { recursive: true, withFileTypes: true })
   assert.equal(outputFiles.filter(entry => entry.isFile()).length,
-    officialFiles.filter(entry => entry.isFile()).length + 1, 'only the adaptation CSS is added')
+    officialFiles.filter(entry => entry.isFile()).length + 2, 'only the adaptation CSS and session bridge are added')
   assert.deepEqual(await readFile(resolve(outputRoot, 'dsh-android.css')),
     await readFile(resolve(projectRoot, 'android.css')))
+  assert.deepEqual(await readFile(resolve(outputRoot, 'dsh-mobile-session.js')),
+    await readFile(resolve(projectRoot, 'dsh-mobile-session.js')))
 })
 
 test('Android adaptation stylesheet covers safe areas and mobile interaction constraints', async () => {

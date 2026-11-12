@@ -50,6 +50,19 @@ breakpoint the sidebar auto-collapses to a 56px rail, but reopening it makes a
 column over the transcript instead. The 56px rail is deliberately kept: it
 carries the only control that reopens the sidebar.
 
+**Drops the rail while the right panel is fullscreen.** The collapsed rail is
+lifted to `position: absolute; z-index: 31` so the whale button keeps its seat.
+The right panel is a `width: 100vw` absolute layer inside its column with no
+layer number of its own, so the whale was painted *above* the panel and covered
+the folder icon of the "Files" tab chip. Below 768px the right panel is always
+fullscreen and the rail is entirely underneath it, so the column is hidden
+(`display: none`) while the frame carries `data-rightbar-fullscreen`; closing the
+panel removes the attribute and the rail — with the whale entry — comes back.
+That attribute is the only signal used on purpose: the panel's own
+`data-sidebar-right-open` is also present on sessions that are not current, and
+keying on it would remove the only way to open the left sidebar while the right
+panel is closed.
+
 **Reclaims narrow-screen gutters.** The composer clearance and the 680px desktop
 content floor are tuned for desktop reading comfort; on a 360px screen they
 spend 64px on margins.

@@ -269,6 +269,25 @@ pre {
   }
 
   /*
+   * 右栏全屏打开时，收起态导轨（鲸鱼入口）整体撤掉。
+   *
+   * 收起态导轨在上面的规则里被抬成 `position:absolute; z-index:31`；而右栏面板是
+   * `[data-rightbar-col]` 里的 `position:absolute; right:0; width:100vw` 图层，自身没有层号
+   * （面板内层 dockkit 的 10/40 只作用于面板内部）。两条叠在一起，导轨连同唯一的鲸鱼按钮
+   * 被画在右栏之上——真机表现是鲸鱼一直悬在右栏标签条左侧，压住「文件」标签的文件夹图标，
+   * 标签左侧也点不准；面板关掉后鲸鱼又盖在正文上。
+   *
+   * 判据只用 `[data-rightbar-fullscreen]`（布局插件在右栏**全屏呈现**时写到 frame 上，
+   * 关闭时由 `closeRightbar` 摘掉）：窄屏（<768px）右栏一律全屏，导轨本来就整个在面板底下、
+   * 点不到，撤掉不损失任何入口。不要换成「面板存在且展开」这类判据：非当前会话的面板也会
+   * 带着展开标记，右栏明明关着却把手机端唯一能打开左栏的鲸鱼入口撤掉。
+   * 面板关闭后属性消失，导轨与鲸鱼入口自动回来；宽度 >720px 时本档位不生效，桌面形态不变。
+   */
+  :is(:has(> [data-shell-overlay]), :has(> [data-side='sidebar'])):is(:has(> [data-rightbar-col]), :has(> [data-side='rightbar']))[data-sidebar-collapsed][data-rightbar-fullscreen] > :first-child {
+    display: none !important;
+  }
+
+  /*
    * 顶栏给鲸鱼按钮让位。
    *
    * 收起后导轨不再占轨道，中栏从屏幕左边缘开始；而鲸鱼按钮仍停在导轨原位

@@ -89,8 +89,22 @@ test('the sidebar drawer keeps the rail reachable and degrades without :has()', 
     /:is\(:has\(>\s*\[data-shell-overlay\]\),\s*:has\(>\s*\[data-side='sidebar'\]\)\):is\(:has\(>\s*\[data-rightbar-col\]\),\s*:has\(>\s*\[data-side='rightbar'\]\)\)/u,
   )
   // The 56px rail carries the only control that reopens the sidebar; hiding
-  // the sidebar column outright would trap the user in the transcript.
-  assert.doesNotMatch(css, /\[data-shell-overlay\]\)[^{]*>\s*:first-child\s*\{[^}]*display:\s*none/u)
+  // the sidebar column outright would trap the user in the transcript. The one
+  // allowed exception is a right panel covering the whole viewport: the rail is
+  // underneath it and unreachable anyway, and while it stays lifted
+  // (z-index:31) the whale button is painted on top of the panel's tab strip.
+  // Every rule that hides the rail must therefore carry that guard.
+  const railHideRules = [...css.matchAll(/>\s*:first-child\s*\{([^}]*)\}/gu)]
+    .filter(match => /display:\s*none/u.test(match[1]))
+    .map(match => css.slice(Math.max(0, match.index - 700), match.index))
+  for (const selector of railHideRules) {
+    assert.match(selector, /\[data-rightbar-fullscreen\]/u,
+      '收起态导轨只能在右栏全屏打开时撤掉，其余情况必须留着鲸鱼入口')
+  }
+  assert.match(
+    css,
+    /\[data-sidebar-collapsed\]\[data-rightbar-fullscreen\]\s*>\s*:first-child\s*\{[^}]*display:\s*none\s*!important/u,
+  )
   // Pointer-only drag handles are the ones that go.
   assert.match(css, /\[data-width-handle\][\s\S]*display:\s*none\s*!important/u)
   // 遮罩必须是真图层：抽屉自己的 ::after，且永不抢点击；box-shadow 假遮罩不许回来。

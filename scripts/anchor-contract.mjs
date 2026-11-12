@@ -29,6 +29,7 @@ export const RUNTIME_ANCHORS = [
   { token: 'data-shell-overlay', purpose: '侧栏抽屉的 frame 结构匹配（:is(:has(> [data-shell-overlay]), :has(> [data-side=\'sidebar\']))）' },
   { token: 'data-rightbar-col', purpose: '侧栏抽屉的 frame 结构匹配（:is(:has(> [data-rightbar-col]), :has(> [data-side=\'rightbar\']))）' },
   { token: 'data-sidebar-collapsed', purpose: '侧栏展开/折叠态判定（覆盖式抽屉与遮罩仅在展开态生效）' },
+  { token: 'data-rightbar-fullscreen', purpose: '右栏全屏打开时收起态导轨让位（鲸鱼入口不许压在右栏标签条上；关闭时属性消失，导轨自动回来）' },
   { token: 'data-side', purpose: '拖拽把手从命中树移除（[data-side] 隐藏）；同时作为抽屉 frame 的第二组标记（手柄与右栏列同属 frame 直接子元素）' },
   { token: 'data-phase', purpose: 'composer 间距变量的作用域锚点（[data-phase]）' },
   { token: '--dsh-composer-side-clearance', purpose: '窄屏侧向留白回收（变量覆盖）' },

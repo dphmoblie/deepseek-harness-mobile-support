@@ -452,14 +452,29 @@ pre {
  * 明暗与强调色：只对齐浏览器自带外观（表单控件、滚动条、focus ring），
  * 不重写官方调色板——访客页面自己的主题仍然生效，外壳只在外层对齐「现在是深还是浅」。
  *
- * system 模式不写 color-scheme：那一刻的深浅是外壳的结论，固化下来会让页面
- * 在系统切换后不再跟随。
+ * 判据是 `data-dsh-theme-resolved`：外壳按**它实际铺在页面上的 surface 亮度**算出来的
+ * 结论（HarnessThemeBridge.pagePalette），不是模式，也不是页面的 prefers-color-scheme。
+ * 那个媒体查询跟的是宿主 Activity 的 uiMode，本应用又允许外观与系统不同，它与这块
+ * surface 没有关系——拿它判深浅就是「应用白字 / 通知黑字」的来源。
+ *
+ * 这里只是首帧的结论（页面还没写内联值的时候）。运行期页面 ThemePresenter 会写
+ * `documentElement.style.colorScheme`，样式表规则压不过内联样式，所以注入脚本自己
+ * 会对齐那个内联值——不用 !important：本文件的所有强制声明都必须留在窄屏/粗指针查询里，
+ * 桌面与平板要保持官方度量。
  */
-html[data-dsh-theme-source='shell'][data-dsh-theme='dark'] {
+html[data-dsh-theme-source='shell'][data-dsh-theme='dark']:not([data-dsh-theme-resolved]) {
   color-scheme: dark;
 }
 
-html[data-dsh-theme-source='shell'][data-dsh-theme='light'] {
+html[data-dsh-theme-source='shell'][data-dsh-theme='light']:not([data-dsh-theme-resolved]) {
+  color-scheme: light;
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-resolved='dark'] {
+  color-scheme: dark;
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-resolved='light'] {
   color-scheme: light;
 }
 
@@ -510,6 +525,45 @@ html[data-dsh-theme-source='shell'] body {
   --dsw-alias-interactive-bg-active: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 70%), transparent);
   --dsw-alias-button-ghost-active-fill: color-mix(in srgb, var(--dsh-theme-surface) calc(var(--dsh-theme-control-opacity, 1) * 70%), transparent);
   --dsw-alias-button-ghost-active-border: color-mix(in srgb, var(--dsh-theme-accent) calc(var(--dsh-theme-control-opacity, 1) * 62%), transparent);
+}
+
+/*
+ * 文字令牌必须跟底色同源。
+ *
+ * 官方把 `--dsw-alias-label-*` 声明在 `body` 与 `body[data-ds-dark-theme]` 两处，而后面
+ * 那个属性**页面自己的主题插件也写**（设置变更、跨页同步、prefers-color-scheme 变化都会
+ * 重放）。只重绑底色就得到「底色跟壳、文字跟页面」：黑字压深底几乎不可读（用户报的现象二），
+ * 反方向则是白字压浅底。
+ *
+ * 权重：`html[data-dsh-theme-source='shell'][data-dsh-theme-resolved] body` 是 0,2,2，
+ * 高于 `body[data-ds-dark-theme]` 的 0,1,1，页面再 apply 也翻不动这三档文字。
+ * 值来自桥按 surface 亮度算好的 `--dsh-theme-label-*`；`var()` 的缺省值取自官方同一套
+ * 调色板，桥没升级（不写这三个变量）时也不会掉成透明或继承色。
+ *
+ * 前两条 `:not(...)` 是旧版桥的兜底：没有 resolved 时，显式 light/dark 的模式即结论。
+ */
+html[data-dsh-theme-source='shell'][data-dsh-theme='dark']:not([data-dsh-theme-resolved]) body {
+  --dsw-alias-label-primary: var(--dsh-theme-label-primary, #f9fafb);
+  --dsw-alias-label-secondary: var(--dsh-theme-label-secondary, #cfd3d6);
+  --dsw-alias-label-tertiary: var(--dsh-theme-label-tertiary, #adb2b8);
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme='light']:not([data-dsh-theme-resolved]) body {
+  --dsw-alias-label-primary: var(--dsh-theme-label-primary, #0f1115);
+  --dsw-alias-label-secondary: var(--dsh-theme-label-secondary, #61666b);
+  --dsw-alias-label-tertiary: var(--dsh-theme-label-tertiary, #81858c);
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-resolved='dark'] body {
+  --dsw-alias-label-primary: var(--dsh-theme-label-primary, #f9fafb);
+  --dsw-alias-label-secondary: var(--dsh-theme-label-secondary, #cfd3d6);
+  --dsw-alias-label-tertiary: var(--dsh-theme-label-tertiary, #adb2b8);
+}
+
+html[data-dsh-theme-source='shell'][data-dsh-theme-resolved='light'] body {
+  --dsw-alias-label-primary: var(--dsh-theme-label-primary, #0f1115);
+  --dsw-alias-label-secondary: var(--dsh-theme-label-secondary, #61666b);
+  --dsw-alias-label-tertiary: var(--dsh-theme-label-tertiary, #81858c);
 }
 
 /*
